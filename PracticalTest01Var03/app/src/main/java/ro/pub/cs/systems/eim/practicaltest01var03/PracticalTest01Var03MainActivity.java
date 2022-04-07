@@ -2,13 +2,15 @@ package ro.pub.cs.systems.eim.practicaltest01var03;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+public class PracticalTest01Var03MainActivity extends AppCompatActivity {
     EditText firstNumber;
     EditText secondNumber;
     TextView operationTextView;
@@ -16,11 +18,13 @@ public class MainActivity extends AppCompatActivity {
     Button minus;
     Button next_activity;
 
+    public static final String EXTRA_OPERATION = "ro.pub.cs.systems.eim.practicaltest01var03.OPERATION_STRING";
+    public static final int SECOND_ACTIVITY_REQUEST_CODE = 1236969;
 
     @Override
     protected void onCreate (Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_practical_test01_var03_main);
 
         firstNumber = findViewById(R.id.first_number);
         secondNumber = findViewById(R.id.second_number);
@@ -39,7 +43,6 @@ public class MainActivity extends AppCompatActivity {
             } catch (NumberFormatException e) {
                 Toast.makeText(getApplicationContext(), "Error: input not a number", Toast.LENGTH_SHORT).show();
             }
-
         });
 
         minus.setOnClickListener(l -> {
@@ -52,7 +55,16 @@ public class MainActivity extends AppCompatActivity {
             } catch (NumberFormatException e) {
                 Toast.makeText(getApplicationContext(), "Error: input not a number", Toast.LENGTH_SHORT).show();
             }
+        });
 
+        next_activity.setOnClickListener(l -> {
+            Intent intent = new Intent(this, PracticalTest01Var03SecondaryActivity.class);
+            String operation = (String) operationTextView.getText();
+            if (operation.length() == 0) {
+                Toast.makeText(getApplicationContext(), "Error: no operation made", Toast.LENGTH_SHORT).show();
+            }
+            intent.putExtra(EXTRA_OPERATION, operation);
+            startActivityForResult(intent, SECOND_ACTIVITY_REQUEST_CODE);
         });
     }
 
@@ -77,5 +89,18 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);
+        if (requestCode == SECOND_ACTIVITY_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                Toast.makeText(getApplicationContext(), "Result: Correct", Toast.LENGTH_SHORT).show();
+            } else if (resultCode == Activity.RESULT_CANCELED) {
+                Toast toast = Toast.makeText(getApplicationContext(), "Result: Incorrect", Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        }
     }
 }
