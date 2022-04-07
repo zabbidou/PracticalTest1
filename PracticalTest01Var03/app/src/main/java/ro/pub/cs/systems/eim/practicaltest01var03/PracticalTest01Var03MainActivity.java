@@ -3,12 +3,17 @@ package ro.pub.cs.systems.eim.practicaltest01var03;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
 
 public class PracticalTest01Var03MainActivity extends AppCompatActivity {
     EditText firstNumber;
@@ -17,8 +22,17 @@ public class PracticalTest01Var03MainActivity extends AppCompatActivity {
     Button plus;
     Button minus;
     Button next_activity;
+    int actionIndex = 0;
+    boolean serviceStarted = false;
+    private IntentFilter intentFilter = new IntentFilter();
+    BroadcastReceiver broadcastReceiver = new PracticalTest01Var03BroadcastReceiver();
 
+    public static final String[] actionTypes = new String[]{"ACTION1", "ACTION2"};
     public static final String EXTRA_OPERATION = "ro.pub.cs.systems.eim.practicaltest01var03.OPERATION_STRING";
+    public static final String EXTRA_NUMBER1 = "ro.pub.cs.systems.eim.practicaltest01var03.NUMBER1";
+    public static final String EXTRA_NUMBER2 = "ro.pub.cs.systems.eim.practicaltest01var03.NUMBER2";
+    public static final String EXTRA_BROADCAST = "ro.pub.cs.systems.eim.practicaltest01var03.BROADCAST";
+    public static final String BROADCAST_RECEIVER_TAG = "[BRECEIVER]";
     public static final int SECOND_ACTIVITY_REQUEST_CODE = 1236969;
 
     @Override
@@ -33,6 +47,8 @@ public class PracticalTest01Var03MainActivity extends AppCompatActivity {
         minus = findViewById(R.id.button_minus);
         next_activity = findViewById(R.id.button_activity);
 
+        intentFilter.addAction(actionTypes[0]);
+
         plus.setOnClickListener(l -> {
             int first, second;
             try {
@@ -40,6 +56,12 @@ public class PracticalTest01Var03MainActivity extends AppCompatActivity {
                 second = Integer.parseInt(String.valueOf(secondNumber.getText()));
                 String operation = first + " + " + second + " = " + (first + second);
                 operationTextView.setText(operation);
+                Intent intent = new Intent(getApplicationContext(), PracticalTest01Var03Service.class);
+                intent.putExtra(EXTRA_NUMBER1, first);
+                intent.putExtra(EXTRA_NUMBER2, second);
+                getApplicationContext().startService(intent);
+                Log.d("[MainActivity]", "Service started");
+                serviceStarted = true;
             } catch (NumberFormatException e) {
                 Toast.makeText(getApplicationContext(), "Error: input not a number", Toast.LENGTH_SHORT).show();
             }
@@ -52,6 +74,12 @@ public class PracticalTest01Var03MainActivity extends AppCompatActivity {
                 second = Integer.parseInt(String.valueOf(secondNumber.getText()));
                 String operation = first + " - " + second + " = " + (first - second);
                 operationTextView.setText(operation);
+                Intent intent = new Intent(getApplicationContext(), PracticalTest01Var03Service.class);
+                intent.putExtra(EXTRA_NUMBER1, first);
+                intent.putExtra(EXTRA_NUMBER2, second);
+                getApplicationContext().startService(intent);
+                Log.d("[MainActivity]", "Service started");
+                serviceStarted = true;
             } catch (NumberFormatException e) {
                 Toast.makeText(getApplicationContext(), "Error: input not a number", Toast.LENGTH_SHORT).show();
             }
@@ -102,5 +130,26 @@ public class PracticalTest01Var03MainActivity extends AppCompatActivity {
                 toast.show();
             }
         }
+    }
+
+    @Override
+    protected void onDestroy () {
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(broadcastReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onPause() {
+        unregisterReceiver(broadcastReceiver);
+        if (serviceStarted) {
+            Intent intent = new Intent(this, PracticalTest01Var03Service.class);
+            stopService(intent);
+        }
+        super.onPause();
     }
 }
